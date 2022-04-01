@@ -1,35 +1,40 @@
+import throttle from 'lodash.throttle';
+
 const formRef = document.querySelector('.feedback-form');
 
-formRef.addEventListener('input', onTextFormInput);
+formRef.addEventListener('input', throttle(onTextFormInput, 500));
 formRef.addEventListener('click', onInputSubmit);
 
-let formData = JSON.parse(localStorage.getItem('feedback-form-state')) || {};
+const STORAGE_KEY = 'feedback-form-state';
+
+const formDataSaved = localStorage.getItem(STORAGE_KEY);
+let formData = {};
 
 populateFormData();
 
 function onTextFormInput(evn) {
   formData[evn.target.name] = evn.target.value;
-  localStorage.setItem('feedback-form-state', JSON.stringify(formData));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
 }
 
 function onInputSubmit(evn) {
   evn.preventDefault();
 
   if (evn.target.nodeName === 'BUTTON') {
-    const { email, message } = evn.currentTarget.elements;
-
-    console.log(email.value, message.value);
+    console.log(formData);
     evn.currentTarget.reset();
-    localStorage.removeItem('feedback-form-state');
+    localStorage.removeItem(STORAGE_KEY);
     formData = {};
   }
 }
 
 function populateFormData() {
-  const { email, message } = formData;
+  if (formDataSaved) {
+    const formDataParse = JSON.parse(formDataSaved);
+    const { email, message } = formDataParse;
 
-  if (email || message) {
     formRef.elements.email.value = email || null;
     formRef.elements.message.value = message || null;
+    formData = formDataParse;
   }
 }
